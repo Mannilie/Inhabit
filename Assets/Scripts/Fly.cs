@@ -2,27 +2,67 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Fly : MonoBehaviour
+public class Fly : Agent
 {
-    public float speed = 10f;
-    public float radialDistance = 2f;
-    public Transform target;
-    
-    // Update is called once per frame
-    void Update()
+    [Header("Properties")]
+    public int damage = 10;
+    public float attackRate = 1f;
+    public float detectRadius = 2f;
+    public LineRenderer shotLine;
+    public float lineDelay = .1f;
+
+    private float shootTimer = 0f;
+    private Transform start, end;
+
+    private void OnDrawGizmos()
     {
-        if (transform.parent != target)
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, detectRadius);
+    }
+
+    protected override void Update()
+    {
+        base.Update();
+
+        shootTimer += Time.deltaTime;
+        float fraction = 1.0f / attackRate;
+        if (shootTimer >= fraction)
         {
-            transform.SetParent(null);
-
-            Vector3 direction = target.position - transform.position;
-            transform.position += direction.normalized * speed * Time.deltaTime;
-
-            float distance = Vector3.Distance(target.position, transform.position);
-            if (distance < radialDistance)
+            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, detectRadius);
+            foreach (var hit in hits)
             {
-                transform.SetParent(target);
+                Moth moth = hit.GetComponent<Moth>();
+                if (moth)
+                {
+                    // Attack moth!
+                    start = transform;
+                    end = moth.transform;
+
+                    StartCoroutine(ShowLine(lineDelay));
+
+                    moth.TakeDamage(damage);
+                }
             }
+            shootTimer = 0f;
         }
     }
+
+    void LateUpdate()
+    {
+        if (start && end)
+        {
+            shotLine.SetPosition(0, start.position);
+            shotLine.SetPosition(1, end.position);
+        }
+    }
+
+    IEnumerator ShowLine(float lineDelay)
+    {
+        shotLine.enabled = true;
+
+        yield return new WaitForSeconds(lineDelay);
+
+        shotLine.enabled = false;
+    }
+
 }

@@ -29,12 +29,8 @@ public class CameraPanZoom : MonoBehaviour
     }
     private void LateUpdate()
     {
-        // Unlock the cursor before panning (because Pan will hide it)
-        Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.None;
-
         // If Middle mouse is down
-        if (Input.GetMouseButton(2))
+        if (Input.GetMouseButton(0))
         {
             // Pan the camera based on previous and current mouse positions
             Pan(prevMousePos, currMousePos);
@@ -68,9 +64,6 @@ public class CameraPanZoom : MonoBehaviour
 
     public void Pan(Vector3 prevScreenPos, Vector3 currScreenPos)
     {
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Confined;
-
         Vector3 prevWorldPos = attachedCamera.ScreenToWorldPoint(prevScreenPos);
         Vector3 currWorldPos = attachedCamera.ScreenToWorldPoint(currScreenPos);
         // Get movement as a vector2 to cancel out Z
